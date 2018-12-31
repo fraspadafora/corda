@@ -15,15 +15,10 @@ import net.corda.finance.contracts.FixOf
 import net.corda.finance.contracts.asset.CASH
 import net.corda.finance.contracts.asset.Cash
 import net.corda.irs.flows.RatesFixFlow
-import net.corda.testing.core.ALICE_NAME
-import net.corda.testing.core.BOB_NAME
-import net.corda.testing.core.DUMMY_NOTARY_NAME
-import net.corda.testing.core.TestIdentity
-import net.corda.testing.core.singleIdentity
+import net.corda.testing.core.*
 import net.corda.testing.internal.LogHelper
-import net.corda.testing.node.MockNetwork
-import net.corda.testing.node.MockNodeParameters
-import net.corda.testing.node.StartedMockNode
+import net.corda.testing.node.*
+import net.corda.testing.node.internal.FINANCE_CORDAPPS
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.After
 import org.junit.Before
@@ -43,30 +38,30 @@ class OracleNodeTearOffTests {
 
     private val dummyCashIssuer = TestIdentity(CordaX500Name("Cash issuer", "London", "GB"))
 
-    val DUMMY_NOTARY = TestIdentity(DUMMY_NOTARY_NAME, 20).party
-    val alice = TestIdentity(ALICE_NAME, 70)
+    private val DUMMY_NOTARY = TestIdentity(DUMMY_NOTARY_NAME, 20).party
+    private val alice = TestIdentity(ALICE_NAME, 70)
     private lateinit var mockNet: MockNetwork
     private lateinit var aliceNode: StartedMockNode
     private lateinit var oracleNode: StartedMockNode
     private val oracle get() = oracleNode.services.myInfo.singleIdentity()
 
-    @Before
     // DOCSTART 1
+    @Before
     fun setUp() {
-        mockNet = MockNetwork(cordappPackages = listOf("net.corda.finance.contracts", "net.corda.irs"))
-        aliceNode = mockNet.createPartyNode(ALICE_NAME)
-        oracleNode = mockNet.createNode(MockNodeParameters(legalName = BOB_NAME)).apply {
+        mockNet = MockNetwork(MockNetworkParameters(FINANCE_CORDAPPS + TestCordapp.findCordapp("net.corda.irs")))
+        aliceNode = mockNet.createNode(ALICE_NAME)
+        oracleNode = mockNet.createNode(BOB_NAME).apply {
             transaction {
                 services.cordaService(NodeInterestRates.Oracle::class.java).knownFixes = TEST_DATA
             }
         }
     }
-    // DOCEND 1
 
     @After
     fun tearDown() {
         mockNet.stopNodes()
     }
+    // DOCEND 1
 
     // DOCSTART 2
     @Test
